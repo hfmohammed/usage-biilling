@@ -8,7 +8,7 @@ BRONZE_DIR = Path("bronze")
 BRONZE_DIR.mkdir(exist_ok=True)
 
 
-def generate_event() -> dict[str, str]:
+def generate_event() -> dict[str, str | int]:
     """
     Generate random event
     """
@@ -24,7 +24,7 @@ def generate_event() -> dict[str, str]:
     return event
 
 
-def write_event(event: dict[str, str]) -> None:
+def write_event(event: dict[str, str | int]) -> None:
     """
     output the event to Bronze layer
     
