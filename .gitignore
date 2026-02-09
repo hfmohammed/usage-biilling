@@ -1,2 +1,28 @@
+# Python
 venv/
-bronze/events_2*
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.specstory/
+.cursorindexingignore
+.DS_Store
+.idea/
+.vscode/
+
+# Data
+data/bronze/
+data/silver/
+data/gold/
+*.parquet
+*.delta/
