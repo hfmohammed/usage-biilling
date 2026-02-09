@@ -21,8 +21,9 @@ htmlcov/
 .vscode/
 
 # Data
-data/bronze/
-data/silver/
-data/gold/
+data/bronze/*
+data/silver/*
+data/gold/*
 *.parquet
 *.delta/
+scripts/create-gh-issues.sh
