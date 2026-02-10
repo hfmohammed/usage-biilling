@@ -1,8 +1,16 @@
+import logging
+
 import fastapi
 from schemas.core_models import *
 from views.purchase import router as purchase_router
 from database import engine, Base
 import models.purchase
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 app = fastapi.FastAPI()
 

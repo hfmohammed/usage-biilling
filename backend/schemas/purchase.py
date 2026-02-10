@@ -33,3 +33,15 @@ class PurchaseResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class PuchaseUpdateRequest(BaseModel):
+    """
+    Purchase update request model represents a purchase update request in the system.
+    """
+
+    client_id: Optional[str] = None
+    merchant_id: Optional[str] = None
+    amount: Optional[float] = None
+    currency: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+    model_config = ConfigDict(extra="forbid")
