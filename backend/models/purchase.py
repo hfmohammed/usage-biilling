@@ -1,105 +1,31 @@
-from pydantic import BaseModel, Field
+from sqlalchemy import Column, Integer, String, Float, DateTime, JSON
 from datetime import datetime
-from typing import List, Optional
+from database import Base
 import uuid
 
 def new_id() -> str:
     return str(uuid.uuid4())
 
-class User(BaseModel):
-    """
-    User model represents a user of the system.
-    """
 
-    user_id: str = Field(default_factory=new_id)
-    name: str
-    email: str
-    phone: str
-    address: str
-    city: str
-    state: str
-    zip: str
-    country: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+class PurchaseDB(Base):
+    __tablename__ = "purchases"
 
+    id = Column(String, primary_key=True, default=new_id)
+    client_id = Column(String, nullable=False)
+    merchant_id = Column(String, nullable=False)
+    amount = Column(Float, nullable=False)
+    currency = Column(String, nullable=False)
+    tags = Column(JSON, nullable=False, default=[])
 
-class Account(BaseModel):
-    """
-    Account model represents a user's account in the system.
-    """
+    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)
 
-    account_id: str = Field(default_factory=new_id)
-    user_id: str
-    type: str
-    status: str
-    currency: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-
-class Transaction(BaseModel):
-    """
-    Transaction model represents a transaction in the system.
-    """
-
-    transaction_id: str = Field(default_factory=new_id)
-    account_id: str
-    type: str
-    amount: float
-    currency: str
-    description: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-
-class Purchase(BaseModel):
-    """
-    Purchase model represents a purchase in the system.
-    """
-
-    purchase_id: str = Field(default_factory=new_id)
-    user_id: str
-    merchant_id: str
-    amount: float
-    currency: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-    tags: List[str] = Field(default_factory=list)
-
-
-class Portfolio(BaseModel):
-    """
-    Portfolio model represents a portfolio in the system.
-    """
-
-    portfolio_id: str = Field(default_factory=new_id)
-    user_id: str
-    account_id: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-
-class Holding(BaseModel):
-    """
-    Holding model represents a holding in the system.
-    """
-
-    holding_id: str = Field(default_factory=new_id)
-    portfolio_id: str
-    symbol: str
-    quantity: int
-    currency: str
-
-
-class Trade(BaseModel):
-    """
-    Trade model represents a trade in the system.
-    """
-
-    trade_id: str = Field(default_factory=new_id)
-    portfolio_id: str
-    symbol: str
-    quantity: int
-    price: float
-    side: str
-    currency: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-    tags: List[str] = Field(default_factory=list)
-
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "client_id": self.client_id,
+            "merchant_id": self.merchant_id,
+            "amount": self.amount,
+            "currency": self.currency,
+            "tags": self.tags,
+            "timestamp": self.timestamp
+        }
