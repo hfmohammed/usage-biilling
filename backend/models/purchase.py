@@ -1,10 +1,17 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import List
+from typing import List, Optional
+import uuid
 
+def new_id() -> str:
+    return str(uuid.uuid4())
 
-class Customer(BaseModel):
-    customer_id: str
+class User(BaseModel):
+    """
+    User model represents a user of the system.
+    """
+
+    user_id: str = Field(default_factory=new_id)
     name: str
     email: str
     phone: str
@@ -13,30 +20,86 @@ class Customer(BaseModel):
     state: str
     zip: str
     country: str
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
-class Merchant(BaseModel):
-    merchant_id: str
-    name: str
-    category: str
-    country: str
-    city: str
-    state: str
-    zip: str
-    country: str
-    created_at: datetime
-    updated_at: datetime
+class Account(BaseModel):
+    """
+    Account model represents a user's account in the system.
+    """
+
+    account_id: str = Field(default_factory=new_id)
+    user_id: str
+    type: str
+    status: str
+    currency: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
-class PurchaseEvent(BaseModel):
-    purchase_id: str
-    customer_id: str
+class Transaction(BaseModel):
+    """
+    Transaction model represents a transaction in the system.
+    """
+
+    transaction_id: str = Field(default_factory=new_id)
+    account_id: str
+    type: str
+    amount: float
+    currency: str
+    description: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class Purchase(BaseModel):
+    """
+    Purchase model represents a purchase in the system.
+    """
+
+    purchase_id: str = Field(default_factory=new_id)
+    user_id: str
     merchant_id: str
     amount: float
     currency: str
-    timestamp: datetime
-    description: str
-    category: str
-    tags: List[str]
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    tags: List[str] = Field(default_factory=list)
+
+
+class Portfolio(BaseModel):
+    """
+    Portfolio model represents a portfolio in the system.
+    """
+
+    portfolio_id: str = Field(default_factory=new_id)
+    user_id: str
+    account_id: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Holding(BaseModel):
+    """
+    Holding model represents a holding in the system.
+    """
+
+    holding_id: str = Field(default_factory=new_id)
+    portfolio_id: str
+    symbol: str
+    quantity: int
+    currency: str
+
+
+class Trade(BaseModel):
+    """
+    Trade model represents a trade in the system.
+    """
+
+    trade_id: str = Field(default_factory=new_id)
+    portfolio_id: str
+    symbol: str
+    quantity: int
+    price: float
+    side: str
+    currency: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    tags: List[str] = Field(default_factory=list)
+
