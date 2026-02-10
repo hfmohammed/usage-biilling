@@ -28,21 +28,41 @@ def create_purchase(purchase_request: PurchaseRequest, db: Session = Depends(get
     db.commit()
     db.refresh(purchase_db)
 
-    return {"status_code": 201, "message": "Purchase created successfully", "purchase_id": purchase_db.to_dict()}
+    purchase_response = PurchaseResponse(
+        purchase_id=purchase_db.id,
+        client_id=purchase_db.client_id,
+        merchant_id=purchase_db.merchant_id,
+        amount=purchase_db.amount,
+        currency=purchase_db.currency,
+        tags=purchase_db.tags,
+        timestamp=purchase_db.timestamp
+    )
+
+    return {"status_code": 201, "message": "Purchase created successfully", "purchase_id": purchase_response}
 
 
 @router.get("/{purchase_id}")
 def get_purchase(purchase_id: str, db: Session = Depends(get_db)):
-    purchase_db = db.query(PurchaseDB).filter(PurchaseDB.id == id).first()
+    purchase_db = db.query(PurchaseDB).filter(PurchaseDB.id == purchase_id).first()
     if not purchase_db:
         raise HTTPException(status_code=404, detail="Purchase not found")
 
-    return {"status_code": 200, "message": "Purchase fetched successfully", "purchase": purchase_db.to_dict()}
+    purchase_response = PurchaseResponse(
+        purchase_id=purchase_db.id,
+        client_id=purchase_db.client_id,
+        merchant_id=purchase_db.merchant_id,
+        amount=purchase_db.amount,
+        currency=purchase_db.currency,
+        tags=purchase_db.tags,
+        timestamp=purchase_db.timestamp
+    )
+
+    return {"status_code": 200, "message": "Purchase fetched successfully", "purchase": purchase_response}
 
 
 @router.put("/{purchase_id}")
 def update_purchase(purchase_id: str, body: PurchaseRequest, db: Session = Depends(get_db)):
-    purchase_db = db.query(PurchaseDB).filter(PurchaseDB.id == id).first()
+    purchase_db = db.query(PurchaseDB).filter(PurchaseDB.id == purchase_id).first()
     if not purchase_db:
         raise HTTPException(status_code=404, detail="Purchase not found")
     
@@ -55,12 +75,23 @@ def update_purchase(purchase_id: str, body: PurchaseRequest, db: Session = Depen
     db.commit()
     db.refresh(purchase_db)
 
-    return {"status_code": 200, "message": "Purchase updated successfully", "purchase": purchase_db.to_dict()}
+    purchase_response = PurchaseResponse(
+        purchase_id=purchase_db.id,
+        client_id=purchase_db.client_id,
+        merchant_id=purchase_db.merchant_id,
+        amount=purchase_db.amount,
+        currency=purchase_db.currency,
+        tags=purchase_db.tags,
+        timestamp=purchase_db.timestamp
+    )
+
+
+    return {"status_code": 200, "message": "Purchase updated successfully", "purchase": purchase_response}
 
 
 @router.delete("/{purchase_id}")
 def delete_purchase(purchase_id: str, db: Session = Depends(get_db)):
-    purchase_db = db.query(PurchaseDB).filter(PurchaseDB.id == id).first()
+    purchase_db = db.query(PurchaseDB).filter(PurchaseDB.id == purchase_id).first()
     if not purchase_db:
         raise HTTPException(status_code=404, detail="Purchase not found")
 
