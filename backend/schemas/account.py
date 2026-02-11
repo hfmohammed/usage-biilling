@@ -8,7 +8,7 @@ class AccountRequest(BaseModel):
     Account model represents a user's account in the system.
     """
 
-    user_id: str
+    name: str
     type: str
     status: str
     currency: str
@@ -23,6 +23,7 @@ class AccountResponse(BaseModel):
 
     account_id: str
     user_id: str
+    name: str
     type: str
     status: str
     currency: str
@@ -37,7 +38,7 @@ class AccountUpdateRequest(BaseModel):
     AccountUpdateRequest model represents a user's account update request in the system.
     """
 
-    user_id: Optional[str] = None
+    name: Optional[str] = None
     type: Optional[str] = None
     status: Optional[str] = None
     currency: Optional[str] = None

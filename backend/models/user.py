@@ -8,7 +8,8 @@ class UserDB(Base):
 
     user_id = Column(String, primary_key=True, default=new_id)
     name = Column(String, nullable=False)
-    email = Column(String, nullable=False)
+    email = Column(String, nullable=False, unique=True, index=True)
+    password_hash = Column(String, nullable=True)  # set by auth/signup; required for login
     phone = Column(String, nullable=False)
     address = Column(String, nullable=False)
     city = Column(String, nullable=False)
@@ -23,6 +24,7 @@ class UserDB(Base):
             "user_id": self.user_id,
             "name": self.name,
             "email": self.email,
+            # password_hash intentionally omitted
             "phone": self.phone,
             "address": self.address,
             "city": self.city,

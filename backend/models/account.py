@@ -13,6 +13,7 @@ class AccountDB(Base):
 
     account_id = Column(String, primary_key=True, default=new_id)
     user_id = Column(String, ForeignKey("users.user_id"), nullable=False)
+    name = Column(String, nullable=False)
     type = Column(String, nullable=False)
     status = Column(String, nullable=False)
     currency = Column(String, nullable=False)
@@ -24,6 +25,7 @@ class AccountDB(Base):
         return {
             "account_id": self.account_id,
             "user_id": self.user_id,
+            "name": self.name,
             "type": self.type,
             "status": self.status,
             "currency": self.currency,
