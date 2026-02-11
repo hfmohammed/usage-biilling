@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from typing import Generator
 
 DATABASE_URL = "sqlite:///./app.db"
 
@@ -16,8 +17,6 @@ SessionLocal = sessionmaker(
 
 Base = declarative_base()
 
-from typing import Generator
-from sqlalchemy.orm import Session
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()

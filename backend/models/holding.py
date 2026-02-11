@@ -3,18 +3,17 @@ from datetime import datetime
 from database import Base
 from models.__init__ import new_id
 
-
-class AccountDB(Base):
+class HoldingDB(Base):
     """
-    AccountDB model represents a user's account in the system.
+    HoldingDB model represents a holding in the system.
     """
 
-    __tablename__ = "accounts"
+    __tablename__ = "holdings"
 
-    account_id = Column(String, primary_key=True, default=new_id)
-    user_id = Column(String, ForeignKey("users.user_id"), nullable=False)
-    type = Column(String, nullable=False)
-    status = Column(String, nullable=False)
+    holding_id = Column(String, primary_key=True, default=new_id)
+    portfolio_id = Column(String, ForeignKey("portfolios.portfolio_id"), nullable=False)
+    symbol = Column(String, nullable=False)
+    quantity = Column(Integer, nullable=False)
     currency = Column(String, nullable=False)
 
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
@@ -22,10 +21,10 @@ class AccountDB(Base):
 
     def to_dict(self):
         return {
-            "account_id": self.account_id,
-            "user_id": self.user_id,
-            "type": self.type,
-            "status": self.status,
+            "holding_id": self.holding_id,
+            "portfolio_id": self.portfolio_id,
+            "symbol": self.symbol,
+            "quantity": self.quantity,
             "currency": self.currency,
             "created_at": self.created_at,
             "updated_at": self.updated_at

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from models.purchase import PurchaseDB
-from schemas.purchase import PurchaseResponse, PurchaseRequest
+from schemas.purchase import PurchaseResponse, PurchaseRequest, PurchaseUpdateRequest
 from sqlalchemy.orm import Session
 from database import get_db
 from typing import List
@@ -21,8 +21,8 @@ def _purchase_db_to_response(purchase_db: PurchaseDB) -> PurchaseResponse:
 
     return PurchaseResponse(
         purchase_id=purchase_db.id,
-        client_id=purchase_db.client_id,
-        merchant_id=purchase_db.merchant_id,
+        client_account_id=purchase_db.client_account_id,
+        merchant_account_id=purchase_db.merchant_account_id,
         amount=purchase_db.amount,
         currency=purchase_db.currency,
         tags=purchase_db.tags,
@@ -54,8 +54,8 @@ def list_purchases(db: Session = Depends(get_db), limit: int = 20, offset: int =
 @router.post("/", response_model=PurchaseResponse, status_code=201)
 def create_purchase(purchase_request: PurchaseRequest, db: Session = Depends(get_db)):
     purchase_db = PurchaseDB(
-        client_id=purchase_request.client_id,
-        merchant_id=purchase_request.merchant_id,
+        client_account_id=purchase_request.client_account_id,
+        merchant_account_id=purchase_request.merchant_account_id,
         amount=purchase_request.amount,
         currency=purchase_request.currency,
         tags=purchase_request.tags
@@ -68,8 +68,8 @@ def create_purchase(purchase_request: PurchaseRequest, db: Session = Depends(get
     # Publish event (stub for now; swap for Kafka later)
     publish_event("purchase_recorded", {
         "purchase_id": purchase_db.id,
-        "client_id": purchase_db.client_id,
-        "merchant_id": purchase_db.merchant_id,
+        "client_account_id": purchase_db.client_account_id,
+        "merchant_account_id": purchase_db.merchant_account_id,
         "amount": purchase_db.amount,
         "currency": purchase_db.currency,
         "tags": purchase_db.tags,
@@ -94,11 +94,11 @@ def update_purchase(purchase_id: str, body: PurchaseUpdateRequest, db: Session =
     if not purchase_db:
         raise HTTPException(status_code=404, detail="Purchase not found")
     
-    if body.client_id:
-        purchase_db.client_id = body.client_id
+    if body.client_account_id:
+        purchase_db.client_account_id = body.client_account_id
     
-    if body.merchant_id:
-        purchase_db.merchant_id = body.merchant_id
+    if body.merchant_account_id:
+        purchase_db.merchant_account_id = body.merchant_account_id
     
     if body.amount:
         purchase_db.amount = body.amount

@@ -8,8 +8,8 @@ class PurchaseRequest(BaseModel):
     Purchase request model represents a purchase request in the system.
     """
 
-    client_id: str
-    merchant_id: str
+    client_account_id: str
+    merchant_account_id: str
     amount: float = Field(gt=0)
     currency: Literal["USD", "CAD"]
     tags: List[str] = Field(default_factory=list)
@@ -23,8 +23,8 @@ class PurchaseResponse(BaseModel):
     """
 
     purchase_id: str
-    client_id: str
-    merchant_id: str
+    client_account_id: str
+    merchant_account_id: str
     amount: float
     currency: str
     tags: List[str]
@@ -33,13 +33,13 @@ class PurchaseResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class PuchaseUpdateRequest(BaseModel):
+class PurchaseUpdateRequest(BaseModel):
     """
     Purchase update request model represents a purchase update request in the system.
     """
 
-    client_id: Optional[str] = None
-    merchant_id: Optional[str] = None
+    client_account_id: Optional[str] = None
+    merchant_account_id: Optional[str] = None
     amount: Optional[float] = None
     currency: Optional[str] = None
     tags: Optional[List[str]] = None
