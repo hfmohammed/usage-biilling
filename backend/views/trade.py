@@ -1,9 +1,12 @@
-from fastapi import APIRouter
-from schemas.trade import TradeResponse, TradeRequest, TradeUpdateRequest
-from database import get_db
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from fastapi import Depends
+
+from auth.deps import get_current_user
+from database import get_db
+from models.portfolio import PortfolioDB
 from models.trade import TradeDB
+from models.user import UserDB
+from schemas.trade import TradeResponse, TradeRequest, TradeUpdateRequest
 
 router = APIRouter(prefix="/api/v1/trade", tags=["trade"])
 
@@ -38,7 +41,13 @@ def trade_health_check():
 
 # ========= Trade Management =========
 @router.post("/", response_model=TradeResponse, status_code=201)
-def create_trade(trade: TradeRequest, db: Session = Depends(get_db)):
+def create_trade(trade: TradeRequest, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    port = db.query(PortfolioDB).filter(
+        PortfolioDB.portfolio_id == trade.portfolio_id,
+        PortfolioDB.user_id == current_user.user_id,
+    ).first()
+    if not port:
+        raise HTTPException(status_code=403, detail="Portfolio must belong to you")
     trade_db = TradeDB(
         portfolio_id=trade.portfolio_id,
         symbol=trade.symbol,
@@ -48,7 +57,6 @@ def create_trade(trade: TradeRequest, db: Session = Depends(get_db)):
         currency=trade.currency,
         tags=trade.tags
     )
-
     db.add(trade_db)
     db.commit()
     db.refresh(trade_db)
@@ -56,22 +64,34 @@ def create_trade(trade: TradeRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/{trade_id}", response_model=TradeResponse, status_code=200)
-def get_trade(trade_id: str, db: Session = Depends(get_db)):
-    trade_db = db.query(TradeDB).filter(TradeDB.trade_id == trade_id).first()
-
+def get_trade(trade_id: str, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    trade_db = (
+        db.query(TradeDB)
+        .join(PortfolioDB, TradeDB.portfolio_id == PortfolioDB.portfolio_id)
+        .filter(PortfolioDB.user_id == current_user.user_id, TradeDB.trade_id == trade_id)
+        .first()
+    )
     if not trade_db:
         raise HTTPException(status_code=404, detail="Trade not found")
-
     return _trade_db_to_response(trade_db)
 
 @router.put("/{trade_id}", response_model=TradeResponse, status_code=200)
-def update_trade(trade_id: str, body: TradeUpdateRequest, db: Session = Depends(get_db)):
-    trade_db = db.query(TradeDB).filter(TradeDB.trade_id == trade_id).first()
-
+def update_trade(trade_id: str, body: TradeUpdateRequest, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    trade_db = (
+        db.query(TradeDB)
+        .join(PortfolioDB, TradeDB.portfolio_id == PortfolioDB.portfolio_id)
+        .filter(PortfolioDB.user_id == current_user.user_id, TradeDB.trade_id == trade_id)
+        .first()
+    )
     if not trade_db:
         raise HTTPException(status_code=404, detail="Trade not found")
-
     if body.portfolio_id:
+        port = db.query(PortfolioDB).filter(
+            PortfolioDB.portfolio_id == body.portfolio_id,
+            PortfolioDB.user_id == current_user.user_id,
+        ).first()
+        if not port:
+            raise HTTPException(status_code=403, detail="Portfolio must belong to you")
         trade_db.portfolio_id = body.portfolio_id
     if body.symbol:
         trade_db.symbol = body.symbol
@@ -96,12 +116,15 @@ def update_trade(trade_id: str, body: TradeUpdateRequest, db: Session = Depends(
 
 
 @router.delete("/{trade_id}", status_code=200)
-def delete_trade(trade_id: str, db: Session = Depends(get_db)):
-    trade_db = db.query(TradeDB).filter(TradeDB.trade_id == trade_id).first()
-
+def delete_trade(trade_id: str, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    trade_db = (
+        db.query(TradeDB)
+        .join(PortfolioDB, TradeDB.portfolio_id == PortfolioDB.portfolio_id)
+        .filter(PortfolioDB.user_id == current_user.user_id, TradeDB.trade_id == trade_id)
+        .first()
+    )
     if not trade_db:
         raise HTTPException(status_code=404, detail="Trade not found")
-
     db.delete(trade_db)
     db.commit()
 

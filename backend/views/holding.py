@@ -1,10 +1,14 @@
-from fastapi import APIRouter
-from schemas.holding import HoldingRequest, HoldingResponse, HoldingUpdateRequest
-from database import get_db
-from sqlalchemy.orm import Session
-from fastapi import Depends
-from models.holding import HoldingDB
+from datetime import datetime
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from auth.deps import get_current_user
+from database import get_db
+from models.holding import HoldingDB
+from models.portfolio import PortfolioDB
+from models.user import UserDB
+from schemas.holding import HoldingRequest, HoldingResponse, HoldingUpdateRequest
 
 router = APIRouter(prefix="/api/v1/holding", tags=["holding"])
 
@@ -36,7 +40,13 @@ def holding_health_check():
 
 
 @router.post("/", response_model=HoldingResponse, status_code=201)
-def create_holding(holding: HoldingRequest, db: Session = Depends(get_db)):
+def create_holding(holding: HoldingRequest, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    port = db.query(PortfolioDB).filter(
+        PortfolioDB.portfolio_id == holding.portfolio_id,
+        PortfolioDB.user_id == current_user.user_id,
+    ).first()
+    if not port:
+        raise HTTPException(status_code=403, detail="Portfolio must belong to you")
     holding_db = HoldingDB(
         portfolio_id=holding.portfolio_id,
         symbol=holding.symbol,
@@ -50,20 +60,35 @@ def create_holding(holding: HoldingRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/{holding_id}", response_model=HoldingResponse, status_code=200)
-def get_holding(holding_id: str, db: Session = Depends(get_db)):
-    holding_db = db.query(HoldingDB).filter(HoldingDB.holding_id == holding_id).first()
+def get_holding(holding_id: str, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    holding_db = (
+        db.query(HoldingDB)
+        .join(PortfolioDB, HoldingDB.portfolio_id == PortfolioDB.portfolio_id)
+        .filter(PortfolioDB.user_id == current_user.user_id, HoldingDB.holding_id == holding_id)
+        .first()
+    )
     if not holding_db:
         raise HTTPException(status_code=404, detail="Holding not found")
     return _holding_db_to_response(holding_db)
 
 
 @router.put("/{holding_id}", response_model=HoldingResponse, status_code=200)
-def update_holding(holding_id: str, body: HoldingUpdateRequest, db: Session = Depends(get_db)):
-    holding_db = db.query(HoldingDB).filter(HoldingDB.holding_id == holding_id).first()
+def update_holding(holding_id: str, body: HoldingUpdateRequest, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    holding_db = (
+        db.query(HoldingDB)
+        .join(PortfolioDB, HoldingDB.portfolio_id == PortfolioDB.portfolio_id)
+        .filter(PortfolioDB.user_id == current_user.user_id, HoldingDB.holding_id == holding_id)
+        .first()
+    )
     if not holding_db:
         raise HTTPException(status_code=404, detail="Holding not found")
-    
     if body.portfolio_id:
+        port = db.query(PortfolioDB).filter(
+            PortfolioDB.portfolio_id == body.portfolio_id,
+            PortfolioDB.user_id == current_user.user_id,
+        ).first()
+        if not port:
+            raise HTTPException(status_code=403, detail="Portfolio must belong to you")
         holding_db.portfolio_id = body.portfolio_id
     if body.symbol:
         holding_db.symbol = body.symbol
@@ -79,11 +104,15 @@ def update_holding(holding_id: str, body: HoldingUpdateRequest, db: Session = De
     return _holding_db_to_response(holding_db)
 
 @router.delete("/{holding_id}", status_code=200)
-def delete_holding(holding_id: str, db: Session = Depends(get_db)):
-    holding_db = db.query(HoldingDB).filter(HoldingDB.holding_id == holding_id).first()
+def delete_holding(holding_id: str, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    holding_db = (
+        db.query(HoldingDB)
+        .join(PortfolioDB, HoldingDB.portfolio_id == PortfolioDB.portfolio_id)
+        .filter(PortfolioDB.user_id == current_user.user_id, HoldingDB.holding_id == holding_id)
+        .first()
+    )
     if not holding_db:
         raise HTTPException(status_code=404, detail="Holding not found")
-
     db.delete(holding_db)
     db.commit()
 

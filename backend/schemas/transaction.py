@@ -22,7 +22,6 @@ class TransactionUpdateRequest(BaseModel):
     Transaction update request model represents a transaction update request in the system.
     """
 
-    account_id: Optional[str] = None
     type: Optional[str] = None
     amount: Optional[float] = None
     currency: Optional[str] = None

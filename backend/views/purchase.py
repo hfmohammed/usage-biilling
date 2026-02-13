@@ -1,14 +1,23 @@
 from fastapi import APIRouter, HTTPException, Depends
 from models.purchase import PurchaseDB
+from models.account import AccountDB
+from models.user import UserDB
 from schemas.purchase import PurchaseResponse, PurchaseRequest, PurchaseUpdateRequest
 from sqlalchemy.orm import Session
 from database import get_db
 from typing import List
 
+from auth.deps import get_current_user
 from events import publish_event
 
 
 router = APIRouter(prefix="/api/v1/purchase", tags=["purchase"])
+
+
+def _user_account_ids(db: Session, user_id: str):
+    """Return set of account_ids owned by the user (for scoping purchases)."""
+    rows = db.query(AccountDB.account_id).filter(AccountDB.user_id == user_id).all()
+    return {r[0] for r in rows}
 
 
 def _purchase_db_to_response(purchase_db: PurchaseDB) -> PurchaseResponse:
@@ -39,9 +48,13 @@ def purchase_health_check():
     return {"message": "ok"}
 
 @router.get("/list_purchases", response_model=List[PurchaseResponse], status_code=200)
-def list_purchases(db: Session = Depends(get_db), limit: int = 20, offset: int = 0):
+def list_purchases(db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user), limit: int = 20, offset: int = 0):
+    account_ids = _user_account_ids(db, current_user.user_id)
+    if not account_ids:
+        return []
     purchase_db_list = (
         db.query(PurchaseDB)
+        .filter(PurchaseDB.client_account_id.in_(account_ids))
         .order_by(PurchaseDB.timestamp.desc())
         .offset(offset)
         .limit(limit)
@@ -52,7 +65,10 @@ def list_purchases(db: Session = Depends(get_db), limit: int = 20, offset: int =
 
 # ========= Purchase Management =========
 @router.post("/", response_model=PurchaseResponse, status_code=201)
-def create_purchase(purchase_request: PurchaseRequest, db: Session = Depends(get_db)):
+def create_purchase(purchase_request: PurchaseRequest, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    account_ids = _user_account_ids(db, current_user.user_id)
+    if purchase_request.client_account_id not in account_ids:
+        raise HTTPException(status_code=403, detail="Client account must belong to you")
     purchase_db = PurchaseDB(
         client_account_id=purchase_request.client_account_id,
         merchant_account_id=purchase_request.merchant_account_id,
@@ -80,20 +96,22 @@ def create_purchase(purchase_request: PurchaseRequest, db: Session = Depends(get
 
 
 @router.get("/{purchase_id}", response_model=PurchaseResponse, status_code=200)
-def get_purchase(purchase_id: str, db: Session = Depends(get_db)):
+def get_purchase(purchase_id: str, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    account_ids = _user_account_ids(db, current_user.user_id)
     purchase_db = db.query(PurchaseDB).filter(PurchaseDB.id == purchase_id).first()
-    if not purchase_db:
+    if not purchase_db or purchase_db.client_account_id not in account_ids:
         raise HTTPException(status_code=404, detail="Purchase not found")
-
     return _purchase_db_to_response(purchase_db)
 
 
 @router.put("/{purchase_id}", response_model=PurchaseResponse, status_code=200)
-def update_purchase(purchase_id: str, body: PurchaseUpdateRequest, db: Session = Depends(get_db)):
+def update_purchase(purchase_id: str, body: PurchaseUpdateRequest, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    account_ids = _user_account_ids(db, current_user.user_id)
     purchase_db = db.query(PurchaseDB).filter(PurchaseDB.id == purchase_id).first()
-    if not purchase_db:
+    if not purchase_db or purchase_db.client_account_id not in account_ids:
         raise HTTPException(status_code=404, detail="Purchase not found")
-    
+    if body.client_account_id and body.client_account_id not in account_ids:
+        raise HTTPException(status_code=403, detail="Client account must belong to you")
     if body.client_account_id:
         purchase_db.client_account_id = body.client_account_id
     
@@ -116,11 +134,11 @@ def update_purchase(purchase_id: str, body: PurchaseUpdateRequest, db: Session =
 
 
 @router.delete("/{purchase_id}", status_code=200)
-def delete_purchase(purchase_id: str, db: Session = Depends(get_db)):
+def delete_purchase(purchase_id: str, db: Session = Depends(get_db), current_user: UserDB = Depends(get_current_user)):
+    account_ids = _user_account_ids(db, current_user.user_id)
     purchase_db = db.query(PurchaseDB).filter(PurchaseDB.id == purchase_id).first()
-    if not purchase_db:
+    if not purchase_db or purchase_db.client_account_id not in account_ids:
         raise HTTPException(status_code=404, detail="Purchase not found")
-
     db.delete(purchase_db)
     db.commit()
 
