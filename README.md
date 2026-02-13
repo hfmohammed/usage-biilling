@@ -1,4 +1,5 @@
-# FinVerse  
+# FinVerse
+
 **Event-Driven Finance, Investing, and Commerce Platform**
 
 FinVerse is a **distributed, event-driven financial platform** that unifies **personal banking**, **investment analytics**, and **light e-commerce insights** into a single system.
@@ -12,6 +13,7 @@ The project is designed to demonstrate **backend systems engineering, data pipel
 ## 🚀 Motivation / Use Case
 
 Modern financial products are no longer isolated:
+
 - Banking apps track spending
 - Brokerages track portfolios
 - Commerce platforms track purchases
@@ -48,23 +50,25 @@ Delta Lake (Bronze → Silver → Gold)
 Analytics APIs / Alerts / ML Models
 ```
 
-
 ---
 
 ## 🔧 Tech Stack
 
 ### Backend & Systems
+
 - FastAPI (async API gateway)
 - Apache Kafka (event streaming)
 - PostgreSQL (users, metadata, idempotency)
 - Redis (optional caching)
 
 ### Data & Analytics
+
 - Apache Spark / Databricks
 - Delta Lake
 - MLflow (model tracking)
 
 ### Infra & Tooling
+
 - Docker & Docker Compose
 - GitHub Actions (CI)
 - Terraform (optional IaC)
@@ -74,18 +78,21 @@ Analytics APIs / Alerts / ML Models
 ## 📦 Domain Features
 
 ### 1️⃣ Banking (FinTech)
+
 - Multi-account support (checking, savings, credit)
 - Ledger-style transactions (append-only)
 - Budget tracking by category
 - Spending alerts
 
 ### 2️⃣ Investing (Stocks)
+
 - Portfolio holdings (paper trading)
 - Market price ingestion
 - Portfolio analytics (ROI, allocation, volatility)
 - Price and risk alerts
 
 ### 3️⃣ Light E-Commerce
+
 - Purchase tracking
 - Merchant-level analytics
 - Cashback / reward calculation
@@ -96,16 +103,19 @@ Analytics APIs / Alerts / ML Models
 ## 📊 Data Engineering Pipeline
 
 ### Bronze (Raw)
+
 - Raw Kafka events
 - No validation or mutation
 - Append-only JSON / Delta
 
 ### Silver (Cleaned)
+
 - Schema validation
 - Normalized timestamps
 - Enriched categories and merchants
 
 ### Gold (Analytics)
+
 - Daily balances
 - Spend by category
 - Portfolio value over time
@@ -129,7 +139,7 @@ Analytics APIs / Alerts / ML Models
 
 ### 💳 Use Case 2: User Makes a Purchase
 
-1. User records a purchase (e.g. `$120` at *Amazon*)
+1. User records a purchase (e.g. `$120` at _Amazon_)
 2. FastAPI validates the request
 3. A `transaction_created` event is published to Kafka
 4. Consumers:
@@ -177,10 +187,11 @@ Analytics APIs / Alerts / ML Models
 docker-compose up --build
 ```
 
-* API: http://localhost:8000
-* Kafka UI (optional): http://localhost:8080
+- API: http://localhost:8000
+- Kafka UI (optional): http://localhost:8080
 
 ## 📁 Repository Structure
+
 ```
 finverse/
   backend/        # FastAPI services
@@ -195,18 +206,21 @@ finverse/
 ```
 
 ## 📈 What This Project Demonstrates
-* Event-driven system design
-* Financial data correctness over time
-* Separation of read and write paths
-* Scalable analytics architecture
-* Real-world engineering tradeoffs
+
+- Event-driven system design
+- Financial data correctness over time
+- Separation of read and write paths
+- Scalable analytics architecture
+- Real-world engineering tradeoffs
 
 ## 🧠 Design Tradeoffs
-* Kafka as source of truth: replayability and decoupling
-* Append-only data model: auditability and correctness
-* Eventual consistency: scalability over synchronous writes
-* Lakehouse architecture: unified batch and streaming analytics
+
+- Kafka as source of truth: replayability and decoupling
+- Append-only data model: auditability and correctness
+- Eventual consistency: scalability over synchronous writes
+- Lakehouse architecture: unified batch and streaming analytics
 
 ## ⚠️ Disclaimer
+
 FinVerse is a simulation platform built for learning and portfolio demonstration purposes only.
 It does not move real money or integrate with real financial institutions.
